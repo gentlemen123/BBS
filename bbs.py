@@ -22,6 +22,7 @@ import requests
 from lxml import html
 from bs4 import BeautifulSoup
 
+
 class JobSearch(object):
     def __init__(self):
         self.base_url = "https://bbs.sjtu.edu.cn/bbsdoc?board=JobInfo"
@@ -51,13 +52,21 @@ class JobSearch(object):
         text = requests.get(self.base_url, headers=self.headers).text
 
         soup = BeautifulSoup(text)
-        #print(soup.prettify())
+        article_link = []
+        # print(type(article_link))
 
         for link in soup.find_all('a'):
-            print(link.get('href'))
+            temp = link.get('href')
+            if temp.startswith('bbscon,board,JobInfo,file,M.') or temp.startswith('bbscon?board=JobInfo&file'):
+                article_link.append(temp)
+                # print(temp)
 
-        with open('temp.html', mode='w') as f:
-            f.write(soup.prettify())
+        # print(article_link)
+        # print(type(article_link))
+
+        with open('templink.txt', mode='w') as f:
+            for e in article_link:
+                f.write(e+'\n')
         # tree = html.fromstring(text)
         # result = tree.xpath('/html/body/form/center/nobr/table[3]')
         # for i in result:
@@ -66,7 +75,7 @@ class JobSearch(object):
         # print(type(result))
         # print(result)
         # #print(next_url)
-        return
+        return article_link
 
     def article_parse(self):
         """招聘信息解析,获取邮箱 电话"""
@@ -87,9 +96,9 @@ class JobSearch(object):
 
 def main():
     search = JobSearch()
-    #search.get_next_page(search.base_url)
-    search.enter_job_link(2)
-    #search.article_parse()
+    # search.get_next_page(search.base_url)
+    print(search.enter_job_link(2))
+    # search.article_parse()
 
 
 if __name__ == '__main__':
