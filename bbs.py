@@ -28,7 +28,7 @@ class JobSearch(object):
     def __init__(self):
         self.base_url = "https://bbs.sjtu.edu.cn/bbsdoc?board=JobInfo"
         self.html = ""
-        self.prefix_url = "https://bbs.sjtu.edu.cn/" # 前缀url地址
+        self.prefix_url = "https://bbs.sjtu.edu.cn/"  # 前缀url地址
         self.headers = {
             'User-Agent': ('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
                             '(KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36'),
@@ -43,11 +43,9 @@ class JobSearch(object):
         tree = html.fromstring(text)
         result = tree.xpath('/html/body/form/center/nobr/a[4]/@href')
         next_url = self.prefix_url+result[0]
-        print(result)
-        print(next_url)
         return next_url
 
-    def enter_job_link(self, page_url):
+    def get_job_link(self, page_url):
         """输入网页url，反序输出该网页所有招聘信息url"""
         text = requests.get(page_url, headers=self.headers).text
 
@@ -58,7 +56,7 @@ class JobSearch(object):
         for link in soup.find_all('a'):
             temp = link.get('href')
             if temp.startswith('bbscon,board,JobInfo,file,M.') or temp.startswith('bbscon?board=JobInfo&file'):
-                article_link.append(temp)
+                article_link.append('https://bbs.sjtu.edu.cn/' + temp)
                 # print(temp)
 
         # print(article_link)
@@ -75,10 +73,11 @@ class JobSearch(object):
         # print(type(result))
         # print(result)
         # #print(next_url)
-        return article_link.reverse()
+        article_link.reverse()
+        return article_link
 
     def article_parse(self, article_link):
-        """输入招聘信息url，招聘信息解析,输出邮箱 发帖时间 标题 电话形成钉列表"""
+        """输入招聘信息url，招聘信息解析,输出邮箱 发帖时间 标题 电话形成的列表"""
         infolist = []
         text = requests.get(article_link, headers=self.headers).text
         target_article_list = html.fromstring(text).xpath('//pre/text()')
@@ -97,14 +96,12 @@ class JobSearch(object):
         email_time = ""
         try:
             email = re.search(email_pattern, target_article).group()
-            print(email)
         except Exception:
             print('-'*5 + "邮件格式匹配错误" + '-'*5)
             pass
 
         try:
             tel = re.search(tel_pattern, target_article).group()
-            print(tel)
         except Exception:
             print('-' * 5 + "电话格式匹配错误" + '-' * 5)
             pass
@@ -124,19 +121,32 @@ class JobSearch(object):
             infolist.append(tel)
         return infolist
 
-    def data_entry(self, infolist):
+    @staticmethod
+    def data_entry(infolist):
         """爬取信息录入到bbs.txt中"""
-        with open('bbs.txt', mode='a') as f:
-            f.write(str(infolist) + "\n")
+        if infolist:
+            with open('bbs.txt', mode='a') as f:
+                f.write(str(infolist) + "\n")
+
         return
 
 
 def main():
+    with open('bbs.txt', mode='w') as f:
+        f.write('')
     search = JobSearch()
-    # search.get_next_page(search.base_url)
-    # print(search.enter_job_link(2))
+    job_link = search.get_job_link(search.base_url)
+    for link in job_link:
+        jobinfo = search.article_parse(link)
+        search.data_entry(jobinfo)
+    next_page_url = search.get_next_page(search.base_url)
+    for i in range(0, 10):
 
-    search.data_entry(search.article_parse('https://bbs.sjtu.edu.cn/bbscon,board,JobInfo,file,M.1499376489.A.html'))
+        job_link = search.get_job_link(next_page_url)
+        for link in job_link:
+            jobinfo = search.article_parse(link)
+            search.data_entry(jobinfo)
+        next_page_url = search.get_next_page(next_page_url)
 
 
 if __name__ == '__main__':
