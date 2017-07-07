@@ -86,13 +86,11 @@ class JobSearch(object):
             print('-'*5 + "邮件格式匹配错误" + '-'*5)
             print(article_link)
             pass
-
         try:
             tel = re.search(tel_pattern, target_article).group()
         except AttributeError:
             print('-' * 5 + "招聘信息没有电话" + '-' * 5)
             pass
-
         try:
             time_list = re.findall(time_pattern, time_string)
         except AttributeError:
@@ -102,10 +100,10 @@ class JobSearch(object):
         if len(time_list) >= 3:
             email_time = time_list[0] + '/' + time_list[1] + '/' + time_list[2] + " " + time_list[3] + ":" + time_list[4]
         if email != "":
-            infolist.append(email)
-            infolist.append(email_time)
-            infolist.append(title)
-            infolist.append(tel)
+            infolist.append(('email', email))
+            infolist.append(('发帖时间', email_time))
+            infolist.append(('标题', title))
+            infolist.append(('电话', tel))
         return infolist
 
     @staticmethod
@@ -150,7 +148,7 @@ class JobSearch(object):
 
 def main():
     search = JobSearch()
-    search.crawl(search.base_url, search.new_file())
+    search.crawl(search.base_url, search.new_file(), page_num=5)
 
 
 if __name__ == '__main__':
