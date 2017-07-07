@@ -1,15 +1,21 @@
 #! /usr/bin/env python3
 # coding:utf-8
 
-import re
-re_email1 = re.compile(r'[0-9a-zA-Z.]+@[0-9a-zA-Z.]+?com')
-re_email2 = re.compile(r'<[a-zA-Z]+\s[a-zA-Z]+>\s[0-9a-zA-Z.]+@[0-9a-zA-Z.]+?org')
-email_address = input('Please enter your email address:')
-if re_email1.match(email_address):
-    print ('Yes, your email_address is valid')
-    print (email_address)
-elif re_email2.match(email_address):
-    print ('Yes, your email_address is valid')
-    print (email_address)
-else:
-    print ('sorry, your email address is invalid')
+a1 = [12, 1, 32, 12, 43, 32, 1]
+m = 0
+for i in a1:
+    if a1.index(i) != m:
+        a1.remove()
+    m += 1
+print(a1)
+# print(a1.index(a1[2]))
+# temp = []
+# for x in range(0, len(a1)):
+#     temp.append(a1.index(a1[x]))
+#
+# print(temp)
+# index = list(set(temp))
+# target = []
+# for i in range(0, len(index)):
+#     target.append(a1[index[i]])
+# print(target)

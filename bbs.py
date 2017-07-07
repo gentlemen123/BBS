@@ -18,6 +18,7 @@ https://bbs.sjtu.edu.cn/bbsdoc?board=JobInfo
 数据存储形式：以dict的形式存入data.json
 """
 import datetime
+import json
 import os
 import re
 import requests
@@ -37,6 +38,7 @@ class JobSearch(object):
             'Upgrade-Insecure-Requests': '1',
             'Accept-Language': 'zh,zh-CN;q=0.8,en;q=0.6,zh-TW;q=0.4'
         }
+        self.temp_data = []  # 仅将一个页面所有文章解析信息暂存列表中
 
     def get_next_page(self, current_page_url):
         """输入当前url地址，获取下一页url地址"""
@@ -100,20 +102,31 @@ class JobSearch(object):
         if len(time_list) >= 3:
             email_time = time_list[0] + '/' + time_list[1] + '/' + time_list[2] + " " + time_list[3] + ":" + time_list[4]
         if email != "":
-            infolist.append(('email', email))
-            infolist.append(('发帖时间', email_time))
-            infolist.append(('标题', title))
-            infolist.append(('电话', tel))
-        return infolist
-
-    @staticmethod
-    def data_entry(text, infolist):
-        """爬取信息infolist录入到text中"""
+            infolist.append(email)
+            infolist.append(email_time)
+            infolist.append(title)
+            infolist.append(tel)
         if infolist:
-            with open(text, mode='a') as f:
-                f.write(str(infolist) + "\n")
-                return 1
+            self.temp_data.append(infolist)
+            return 1
         return 0
+
+    def clear_email(self):
+        """
+        将一个页面中相同邮箱的帖子中，除去旧帖子，只保留最新的一个
+        :return:
+        """
+        for post in self.temp_data:
+            post[0]
+        return
+
+    def data_entry(self, text):
+        """爬取信息infolist录入到text中"""
+        # print(self.temp_data)
+        with open(text, mode='a') as f:
+            for tem in self.temp_data:
+                f.write(str(tem) + '\n')
+        return
 
     @staticmethod
     def new_file():
@@ -136,9 +149,10 @@ class JobSearch(object):
             job_link = self.get_job_link(page_url)
             total_job_link += len(job_link)
             for link in job_link:
-                jobinfo = self.article_parse(link)
-                success_link += self.data_entry(file, jobinfo)
+                success_link += self.article_parse(link)
             page_url = self.get_next_page(page_url)
+            self.data_entry(file)
+            self.temp_data = []
         print('招聘信息总数：' + str(total_job_link))
         print('含有邮箱的招聘信息数目：' + str(success_link))
         success = success_link / total_job_link
