@@ -18,6 +18,7 @@ https://bbs.sjtu.edu.cn/bbsdoc?board=JobInfo
 数据存储形式：以dict的形式存入data.json
 """
 
+import re
 import requests
 from lxml import html
 from bs4 import BeautifulSoup
@@ -36,10 +37,9 @@ class JobSearch(object):
             'Accept-Language': 'zh,zh-CN;q=0.8,en;q=0.6,zh-TW;q=0.4'
         }
 
-    def get_next_page(self, base_url):
+    def get_next_page(self, curren_page_url):
         """输入当前url地址，获取下一页url地址"""
-        self.base_url = base_url
-        text = requests.get(self.base_url, headers=self.headers).text
+        text = requests.get(curren_page_url, headers=self.headers).text
         tree = html.fromstring(text)
         result = tree.xpath('/html/body/form/center/nobr/a[4]/@href')
         next_url = self.prefix_url+result[0]
@@ -47,9 +47,9 @@ class JobSearch(object):
         print(next_url)
         return next_url
 
-    def enter_job_link(self, num=2):
-        """输入每页遍历顺序，进入招聘信息"""
-        text = requests.get(self.base_url, headers=self.headers).text
+    def enter_job_link(self, page_url):
+        """输入网页url，反序输出该网页所有招聘信息url"""
+        text = requests.get(page_url, headers=self.headers).text
 
         soup = BeautifulSoup(text)
         article_link = []
@@ -75,30 +75,68 @@ class JobSearch(object):
         # print(type(result))
         # print(result)
         # #print(next_url)
-        return article_link
+        return article_link.reverse()
 
-    def article_parse(self):
-        """招聘信息解析,获取邮箱 电话"""
-        temp_url = "https://bbs.sjtu.edu.cn/bbscon,board,JobInfo,file,M.1499321577.A.html"
-        text = requests.get(temp_url, headers=self.headers).text
-        target_article = html.fromstring(text).xpath('//pre/text()')[1]
-        print(target_article)
+    def article_parse(self, article_link):
+        """输入招聘信息url，招聘信息解析,输出邮箱 发帖时间 标题 电话形成钉列表"""
+        infolist = []
+        text = requests.get(article_link, headers=self.headers).text
+        target_article_list = html.fromstring(text).xpath('//pre/text()')
+        target_article = ""
+        for article in target_article_list:
+            target_article += article
+
+        email_pattern = re.compile(r'[a-zA-Z0-9]+[.]?[\w]+@[0-9a-zA-z]+[.](com|cn)')
+        time_pattern = re.compile(r'[0-9]+')
+        tel_pattern = re.compile(r'1\d{10}')
+        time_string = target_article.split('\n')[2]
         title = target_article.split('\n')[1].split(':')[1].strip()
-        print(title)
-        with open('article.txt', mode='w') as f:
-            f.write(target_article)
-        return
+        email = ""
+        time_list = []
+        tel = ""
+        email_time = ""
+        try:
+            email = re.search(email_pattern, target_article).group()
+            print(email)
+        except Exception:
+            print('-'*5 + "邮件格式匹配错误" + '-'*5)
+            pass
 
-    def data_entry(self):
-        """爬取信息录入"""
+        try:
+            tel = re.search(tel_pattern, target_article).group()
+            print(tel)
+        except Exception:
+            print('-' * 5 + "电话格式匹配错误" + '-' * 5)
+            pass
+
+        try:
+            time_list = re.findall(time_pattern, time_string)
+        except:
+            print('-' * 5 + "时间格式匹配错误" + '-' * 5)
+            pass
+
+        if len(time_list) >= 3:
+            email_time = time_list[0] + '/' + time_list[1] + '/' + time_list[2] + "  " + time_list[3] + ":" + time_list[4]
+        if email != "":
+            infolist.append(email)
+            infolist.append(email_time)
+            infolist.append(title)
+            infolist.append(tel)
+        return infolist
+
+    def data_entry(self, infolist):
+        """爬取信息录入到bbs.txt中"""
+        with open('bbs.txt', mode='a') as f:
+            f.write(str(infolist) + "\n")
         return
 
 
 def main():
     search = JobSearch()
     # search.get_next_page(search.base_url)
-    print(search.enter_job_link(2))
-    # search.article_parse()
+    # print(search.enter_job_link(2))
+
+    search.data_entry(search.article_parse('https://bbs.sjtu.edu.cn/bbscon,board,JobInfo,file,M.1499376489.A.html'))
 
 
 if __name__ == '__main__':
