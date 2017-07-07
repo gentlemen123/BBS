@@ -17,7 +17,8 @@ https://bbs.sjtu.edu.cn/bbsdoc?board=JobInfo
 
 数据存储形式：以dict的形式存入data.json
 """
-
+import datetime
+import os
 import re
 import requests
 from lxml import html
@@ -29,6 +30,7 @@ class JobSearch(object):
         self.base_url = "https://bbs.sjtu.edu.cn/bbsdoc?board=JobInfo"
         self.html = ""
         self.prefix_url = "https://bbs.sjtu.edu.cn/"  # 前缀url地址
+        self.cwd = os.path.dirname(__file__)
         self.headers = {
             'User-Agent': ('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
                             '(KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36'),
@@ -122,30 +124,35 @@ class JobSearch(object):
         return infolist
 
     @staticmethod
-    def data_entry(infolist):
-        """爬取信息录入到bbs.txt中"""
+    def data_entry(text, infolist):
+        """爬取信息infolist录入到text中"""
         if infolist:
-            with open('bbs.txt', mode='a') as f:
+            with open(text, mode='a') as f:
                 f.write(str(infolist) + "\n")
 
         return
 
 
 def main():
-    with open('bbs.txt', mode='w') as f:
-        f.write('')
+    t_human = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+
     search = JobSearch()
+    data_path = os.path.join(search.cwd, 'data/{}/'.format(t_human))
+    if not os.path.exists(data_path):
+        os.makedirs(data_path)
+    data_file = os.path.join(data_path, 'data.txt')
+
     job_link = search.get_job_link(search.base_url)
     for link in job_link:
         jobinfo = search.article_parse(link)
-        search.data_entry(jobinfo)
+        search.data_entry(data_file, jobinfo)
     next_page_url = search.get_next_page(search.base_url)
     for i in range(0, 10):
 
         job_link = search.get_job_link(next_page_url)
         for link in job_link:
             jobinfo = search.article_parse(link)
-            search.data_entry(jobinfo)
+            search.data_entry(data_file, jobinfo)
         next_page_url = search.get_next_page(next_page_url)
 
 
