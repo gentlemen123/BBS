@@ -30,7 +30,6 @@ class JobSearch(object):
         self.base_url = "https://bbs.sjtu.edu.cn/bbsdoc?board=JobInfo"
         self.html = ""
         self.prefix_url = "https://bbs.sjtu.edu.cn/"  # 前缀url地址
-        self.cwd = os.path.dirname(__file__)
         self.headers = {
             'User-Agent': ('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
                             '(KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36'),
@@ -39,9 +38,9 @@ class JobSearch(object):
             'Accept-Language': 'zh,zh-CN;q=0.8,en;q=0.6,zh-TW;q=0.4'
         }
 
-    def get_next_page(self, curren_page_url):
+    def get_next_page(self, current_page_url):
         """输入当前url地址，获取下一页url地址"""
-        text = requests.get(curren_page_url, headers=self.headers).text
+        text = requests.get(current_page_url, headers=self.headers).text
         tree = html.fromstring(text)
         result = tree.xpath('/html/body/form/center/nobr/a[4]/@href')
         next_url = self.prefix_url+result[0]
@@ -50,31 +49,15 @@ class JobSearch(object):
     def get_job_link(self, page_url):
         """输入网页url，反序输出该网页所有招聘信息url"""
         text = requests.get(page_url, headers=self.headers).text
-
         soup = BeautifulSoup(text)
         article_link = []
-        # print(type(article_link))
-
         for link in soup.find_all('a'):
             temp = link.get('href')
             if temp.startswith('bbscon,board,JobInfo,file,M.') or temp.startswith('bbscon?board=JobInfo&file'):
                 article_link.append('https://bbs.sjtu.edu.cn/' + temp)
-                # print(temp)
-
-        # print(article_link)
-        # print(type(article_link))
-
-        with open('templink.txt', mode='w') as f:
-            for e in article_link:
-                f.write(e+'\n')
-        # tree = html.fromstring(text)
-        # result = tree.xpath('/html/body/form/center/nobr/table[3]')
-        # for i in result:
-        #     print(i)
-        #
-        # print(type(result))
-        # print(result)
-        # #print(next_url)
+        # with open('templink.txt', mode='w') as f:
+        #     for e in article_link:
+        #         f.write(e+'\n')
         article_link.reverse()
         return article_link
 
@@ -87,35 +70,37 @@ class JobSearch(object):
         for article in target_article_list:
             target_article += article
 
-        email_pattern = re.compile(r'[a-zA-Z0-9]+[.]?[\w]+@[0-9a-zA-z]+[.](com|cn)')
+        email_pattern = re.compile(r'[a-zA-Z0-9]+[.]?[\w]+@[0-9a-zA-z-]+[.][a-zA-z]+.?[a-zA-Z]+')
         time_pattern = re.compile(r'[0-9]+')
         tel_pattern = re.compile(r'1\d{10}')
+
         time_string = target_article.split('\n')[2]
         title = target_article.split('\n')[1].split(':')[1].strip()
         email = ""
-        time_list = []
         tel = ""
+        time_list = []
         email_time = ""
         try:
             email = re.search(email_pattern, target_article).group()
-        except Exception:
+        except AttributeError:
             print('-'*5 + "邮件格式匹配错误" + '-'*5)
+            print(article_link)
             pass
 
         try:
             tel = re.search(tel_pattern, target_article).group()
-        except Exception:
-            print('-' * 5 + "电话格式匹配错误" + '-' * 5)
+        except AttributeError:
+            print('-' * 5 + "招聘信息没有电话" + '-' * 5)
             pass
 
         try:
             time_list = re.findall(time_pattern, time_string)
-        except:
+        except AttributeError:
             print('-' * 5 + "时间格式匹配错误" + '-' * 5)
             pass
 
         if len(time_list) >= 3:
-            email_time = time_list[0] + '/' + time_list[1] + '/' + time_list[2] + "  " + time_list[3] + ":" + time_list[4]
+            email_time = time_list[0] + '/' + time_list[1] + '/' + time_list[2] + " " + time_list[3] + ":" + time_list[4]
         if email != "":
             infolist.append(email)
             infolist.append(email_time)
@@ -129,31 +114,43 @@ class JobSearch(object):
         if infolist:
             with open(text, mode='a') as f:
                 f.write(str(infolist) + "\n")
+                return 1
+        return 0
 
+    @staticmethod
+    def new_file():
+        """新建数据存储文件"""
+        t_human = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+        data_path = os.path.join(os.path.dirname(__file__), 'data/{}/'.format(t_human))
+        if not os.path.exists(data_path):
+            os.makedirs(data_path)
+        data_file = os.path.join(data_path, 'data.txt')
+        return data_file
+
+    def crawl(self, page_url, file, page_num=10):
+        """爬虫程序！
+           page_url:爬取页面地址
+           file：数据存储文件
+           page_num:最大爬去页面数"""
+        total_job_link = 0
+        success_link = 0
+        for i in range(0, page_num):
+            job_link = self.get_job_link(page_url)
+            total_job_link += len(job_link)
+            for link in job_link:
+                jobinfo = self.article_parse(link)
+                success_link += self.data_entry(file, jobinfo)
+            page_url = self.get_next_page(page_url)
+        print('招聘信息总数：' + str(total_job_link))
+        print('含有邮箱的招聘信息数目：' + str(success_link))
+        success = success_link / total_job_link
+        print('成功率：%.2f%%' % (success * 100))
         return
 
 
 def main():
-    t_human = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
-
     search = JobSearch()
-    data_path = os.path.join(search.cwd, 'data/{}/'.format(t_human))
-    if not os.path.exists(data_path):
-        os.makedirs(data_path)
-    data_file = os.path.join(data_path, 'data.txt')
-
-    job_link = search.get_job_link(search.base_url)
-    for link in job_link:
-        jobinfo = search.article_parse(link)
-        search.data_entry(data_file, jobinfo)
-    next_page_url = search.get_next_page(search.base_url)
-    for i in range(0, 10):
-
-        job_link = search.get_job_link(next_page_url)
-        for link in job_link:
-            jobinfo = search.article_parse(link)
-            search.data_entry(data_file, jobinfo)
-        next_page_url = search.get_next_page(next_page_url)
+    search.crawl(search.base_url, search.new_file())
 
 
 if __name__ == '__main__':
