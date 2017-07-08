@@ -179,13 +179,30 @@ class JobSearch(object):
             success = success_link / total_job_link
         else:
             success = 0
-        print('成功率：%.2f%%' % (success * 100))
+        print('成功率：%.2f%%  :)' % (success * 100))
         return
 
 
 def main():
     search = JobSearch()
-    search.crawl(search.base_url, search.new_file(), page_num=5)
+    choice = input("请输入要爬取的BBS：就业信息（1） or 求职交流（2） \n")
+    num = input("请输入要爬取的页数(默认5页）：\n")
+    if int(num) <= 0 or not num.isdigit():
+        print("对不起，您要求爬取的页数不符合要求！系统将默认爬取5页数据")
+        num = 5
+    else:
+        num = int(num)
+
+    if choice == "就业信息" or int(choice) == 1:
+        print("*****就业信息正在爬取*****")
+        search.base_url = "https://bbs.sjtu.edu.cn/bbsdoc?board=JobInfo"
+    elif choice == "求职交流" or int(choice) == 2:
+        print("*****求职交流正在爬取*****")
+        search.base_url = "https://bbs.sjtu.edu.cn/bbsdoc?board=JobForum"
+    else:
+        print("请选择1 or 2")
+        return
+    search.crawl(search.base_url, search.new_file(), page_num=num)
 
 
 if __name__ == '__main__':
