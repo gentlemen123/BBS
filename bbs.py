@@ -70,19 +70,23 @@ class JobSearch(object):
 
     def article_parse(self, article_link):
         """输入招聘信息url，招聘信息解析,输出邮箱 发帖时间 标题 电话形成的列表"""
+        print(article_link)
         infolist = []
+        time_string = ''
+        title = ''
+        target_article = ""
         text = requests.get(article_link, headers=self.headers).text
         target_article_list = html.fromstring(text).xpath('//pre/text()')
-        target_article = ""
         for article in target_article_list:
             target_article += article
-
         email_pattern = re.compile(r'[a-zA-Z0-9]+[.]?[\w]+@[0-9a-zA-z-]+[.][a-zA-z]+[.]?[a-zA-Z]*[.]?[a-zA-Z]*')
         time_pattern = re.compile(r'[0-9]+')
         tel_pattern = re.compile(r'1\d{10}')
-
-        time_string = target_article.split('\n')[2]
-        title = target_article.split('\n')[1].split(':')[1].strip()
+        try:
+            time_string = target_article.split('\n')[2]
+            title = target_article.split('\n')[1].split(':')[1].strip()
+        except TypeError:
+            pass
         email = ""
         tel = ""
         time_list = []
@@ -90,18 +94,18 @@ class JobSearch(object):
         try:
             email = re.search(email_pattern, target_article).group()
         except AttributeError:
-            print('-'*5 + "邮件格式匹配错误" + '-'*5)
+            # print('-'*5 + "邮件格式匹配错误" + '-'*5)
             self.temp_link.append(article_link)
             pass
         try:
             tel = re.search(tel_pattern, target_article).group()
         except AttributeError:
-            print('-' * 5 + "招聘信息没有电话" + '-' * 5)
+            # print('-' * 5 + "招聘信息没有电话" + '-' * 5)
             pass
         try:
             time_list = re.findall(time_pattern, time_string)
         except AttributeError:
-            print('-' * 5 + "时间格式匹配错误" + '-' * 5)
+            # print('-' * 5 + "时间格式匹配错误" + '-' * 5)
             pass
 
         if len(time_list) >= 3:
