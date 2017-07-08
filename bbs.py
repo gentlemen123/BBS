@@ -17,10 +17,10 @@ https://bbs.sjtu.edu.cn/bbsdoc?board=JobInfo
 
 数据存储形式：以dict的形式存入data.json
 """
-import datetime
-import json
+import sys
 import os
 import re
+import datetime
 import requests
 from lxml import html
 from bs4 import BeautifulSoup
@@ -46,7 +46,12 @@ class JobSearch(object):
         text = requests.get(current_page_url, headers=self.headers).text
         tree = html.fromstring(text)
         result = tree.xpath('/html/body/form/center/nobr/a[4]/@href')
-        next_url = self.prefix_url+result[0]
+        if len(result) >= 1:
+            next_url = self.prefix_url + result[0]
+        else:
+            print("url地址捕获错误，当前网页地址为：")
+            print(current_page_url)
+            sys.exit(0)
         return next_url
 
     def get_job_link(self, page_url):
@@ -191,6 +196,7 @@ def main():
     search = JobSearch()
     choice = input("请输入要爬取的BBS：就业信息（1） or 求职交流（2） \n")
     num = input("请输入要爬取的页数(默认5页）：\n")
+    url = input("输入爬取页面url")
     if int(num) <= 0 or not num.isdigit():
         print("对不起，您要求爬取的页数不符合要求！系统将默认爬取5页数据")
         num = 5
@@ -206,6 +212,10 @@ def main():
     else:
         print("请选择1 or 2")
         return
+    if url:
+        search.base_url = url
+    else:
+        pass
     search.crawl(search.base_url, search.new_file(), page_num=num)
 
 
