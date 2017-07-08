@@ -39,6 +39,7 @@ class JobSearch(object):
             'Accept-Language': 'zh,zh-CN;q=0.8,en;q=0.6,zh-TW;q=0.4'
         }
         self.temp_data = []  # 仅将一个页面所有文章解析信息暂存列表中
+        self.temp_link = []  # 招聘信息不含eamil的文章链接
 
     def get_next_page(self, current_page_url):
         """输入当前url地址，获取下一页url地址"""
@@ -72,7 +73,7 @@ class JobSearch(object):
         for article in target_article_list:
             target_article += article
 
-        email_pattern = re.compile(r'[a-zA-Z0-9]+[.]?[\w]+@[0-9a-zA-z-]+[.][a-zA-z]+.?[a-zA-Z]+')
+        email_pattern = re.compile(r'[a-zA-Z0-9]+[.]?[\w]+@[0-9a-zA-z-]+[.][a-zA-z]+[.]?[a-zA-Z]*[.]?[a-zA-Z]*')
         time_pattern = re.compile(r'[0-9]+')
         tel_pattern = re.compile(r'1\d{10}')
 
@@ -86,7 +87,7 @@ class JobSearch(object):
             email = re.search(email_pattern, target_article).group()
         except AttributeError:
             print('-'*5 + "邮件格式匹配错误" + '-'*5)
-            print(article_link)
+            self.temp_link.append(article_link)
             pass
         try:
             tel = re.search(tel_pattern, target_article).group()
@@ -132,8 +133,11 @@ class JobSearch(object):
     def data_entry(self, text):
         """爬取信息self.temp_data录入到text中"""
         # print(self.temp_data)
-        with open(text, mode='a') as f:
+        with open(text[0], mode='a') as f:
             for tem in self.temp_data:
+                f.write(str(tem) + '\n')
+        with open(text[1], mode='a') as f:
+            for tem in self.temp_link:
                 f.write(str(tem) + '\n')
         return
 
@@ -145,7 +149,8 @@ class JobSearch(object):
         if not os.path.exists(data_path):
             os.makedirs(data_path)
         data_file = os.path.join(data_path, 'data.txt')
-        return data_file
+        no_email_link = os.path.join(data_path, 'no_email_link.txt')
+        return data_file, no_email_link
 
     def crawl(self, page_url, file, page_num=10):
         """爬虫程序！
@@ -163,6 +168,7 @@ class JobSearch(object):
             self.clear_same_title()
             self.data_entry(file)
             self.temp_data = []
+            self.temp_link = []
         print('招聘信息总数：' + str(total_job_link))
         print('含有邮箱的招聘信息数目：' + str(success_link))
         success = success_link / total_job_link
