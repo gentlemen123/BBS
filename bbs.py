@@ -57,7 +57,7 @@ class JobSearch(object):
     def get_job_link(self, page_url):
         """输入网页url，反序输出该网页所有招聘信息url"""
         text = requests.get(page_url, headers=self.headers).text
-        soup = BeautifulSoup(text)
+        soup = BeautifulSoup(text, 'lxml')
         article_link = []
         job_link_pattern = re.compile(r'bbscon[?,]board[,=](JobInfo|JobForum)[,&]file')
         for link in soup.find_all('a'):
