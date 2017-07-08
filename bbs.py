@@ -111,17 +111,26 @@ class JobSearch(object):
             return 1
         return 0
 
-    def clear_email(self):
+    def clear_same_title(self):
         """
         将一个页面中相同邮箱的帖子中，除去旧帖子，只保留最新的一个
         :return:
         """
+        title_list = []
+        index_list = []
         for post in self.temp_data:
-            post[0]
+            title_list.append(post[2])
+        for i in range(0, len(title_list)):
+            if title_list.index(title_list[i]) != i:
+                index_list.append(i)
+        index_list.reverse()
+        if index_list:
+            for n in index_list:
+                del self.temp_data[n]
         return
 
     def data_entry(self, text):
-        """爬取信息infolist录入到text中"""
+        """爬取信息self.temp_data录入到text中"""
         # print(self.temp_data)
         with open(text, mode='a') as f:
             for tem in self.temp_data:
@@ -151,6 +160,7 @@ class JobSearch(object):
             for link in job_link:
                 success_link += self.article_parse(link)
             page_url = self.get_next_page(page_url)
+            self.clear_same_title()
             self.data_entry(file)
             self.temp_data = []
         print('招聘信息总数：' + str(total_job_link))
