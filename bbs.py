@@ -54,10 +54,14 @@ class JobSearch(object):
         text = requests.get(page_url, headers=self.headers).text
         soup = BeautifulSoup(text)
         article_link = []
+        job_link_pattern = re.compile(r'bbscon[?,]board[,=](JobInfo|JobForum)[,&]file')
         for link in soup.find_all('a'):
             temp = link.get('href')
-            if temp.startswith('bbscon,board,JobInfo,file,M.') or temp.startswith('bbscon?board=JobInfo&file'):
-                article_link.append('https://bbs.sjtu.edu.cn/' + temp)
+            try:
+                if re.search(job_link_pattern, temp).group():
+                    article_link.append('https://bbs.sjtu.edu.cn/' + temp)
+            except AttributeError:
+                pass
         # with open('templink.txt', mode='w') as f:
         #     for e in article_link:
         #         f.write(e+'\n')
@@ -171,7 +175,10 @@ class JobSearch(object):
             self.temp_link = []
         print('招聘信息总数：' + str(total_job_link))
         print('含有邮箱的招聘信息数目：' + str(success_link))
-        success = success_link / total_job_link
+        if total_job_link:
+            success = success_link / total_job_link
+        else:
+            success = 0
         print('成功率：%.2f%%' % (success * 100))
         return
 
