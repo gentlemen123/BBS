@@ -140,17 +140,21 @@ class JobSearch(object):
             pass
         return article_email + ',' + article_title + ',' + article_time + ',' + article_tel
 
-    def clear_same_title(self):
+    def clear_same_email(self):
         """
         将一个页面中相同邮箱的帖子中，除去旧帖子，只保留最新的一个
         :return:
         """
-        title_list = []
+        email_list = []
         index_list = []
         for post in self.temp_data:
-            title_list.append(post[2])
-        for i in range(0, len(title_list)):
-            if title_list.index(title_list[i]) != i:
+            temp = post.split(',')
+            if len(temp) >= 2:
+                email_list.append(temp[0])
+            else:
+                email_list.append('')
+        for i in range(0, len(email_list)):
+            if email_list.index(email_list[i]) != i:
                 index_list.append(i)
         index_list.reverse()
         if index_list:
@@ -212,7 +216,7 @@ class JobSearch(object):
                         success_link += 1
                 # self.temp_data列表长度达到10，就进行输出,然后清空列表
                 if len(self.temp_data) >= 10:
-                    # self.clear_same_title()
+                    self.clear_same_email()
                     self.data_entry(file)
                     self.temp_data = []
                     self.wrong_article_link = []
