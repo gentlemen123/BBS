@@ -3,6 +3,29 @@
 """
 测试去重，及各种方法文件
 """
+import requests
+import codecs
+
+headers = {
+            'User-Agent': ('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
+                            '(KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36'),
+            'Referer': 'https://easy.lagou.com/im/chat/index.htm',
+            'Upgrade-Insecure-Requests': '1',
+            'Accept-Language': 'zh,zh-CN;q=0.8,en;q=0.6,zh-TW;q=0.4'
+        }
+re = requests.get('https://bbs.sjtu.edu.cn/bbsdoc?board=JobForum', headers=headers)
+print(re.encoding)
+re.encoding = 'gb2312'
+# print(re.encoding)
+html = re.text
+
+with codecs.open('index.html', 'w', 'utf-8') as f:
+    try:
+        # html.encode('gbk')
+        f.write(html)
+    except UnicodeEncodeError:
+        pass
+
 # abc = "25050@qq.com"
 # tt = "nihao中国"
 # tel = "1310062"

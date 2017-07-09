@@ -20,7 +20,6 @@ https://bbs.sjtu.edu.cn/bbsdoc?board=JobInfo
 import sys
 import os
 import re
-import codecs
 import datetime
 import requests
 from lxml import html
@@ -179,15 +178,12 @@ class JobSearch(object):
         :return:
         """
         # print(self.temp_data)
-        try:
-            with codecs.open(text[0], mode='a', encoding='utf-8') as f:
-                for data in self.temp_data:
-                    f.writelines(data + "\n")
-            with codecs.open(text[1], mode='a', encoding='utf-8') as f:
-                for link in self.wrong_article_link:
-                    f.writelines(link + "\n")
-        except UnicodeEncodeError:
-            pass
+        with open(text[0], mode='a') as f:
+            for data in self.temp_data:
+                f.writelines(data + "\n")
+        with open(text[1], mode='a') as f:
+            for link in self.wrong_article_link:
+                f.writelines(link + "\n")
         return
 
     def crawl(self, page_url, file, page_num=10):
@@ -248,7 +244,7 @@ def main():
     elif choice == "求职交流" or int(choice) == 2:
         print("*****求职交流正在爬取*****")
         # search.base_url = "https://bbs.sjtu.edu.cn/bbsdoc?board=JobForum"
-        search.base_url = "https://bbs.sjtu.edu.cn/bbsdoc,board,JobForum,page,3148.html"
+        search.base_url = "https://bbs.sjtu.edu.cn/bbsdoc,board,JobForum,page,2948.html"
     else:
         print("请选择1 or 2")
         return
