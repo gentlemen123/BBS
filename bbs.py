@@ -206,6 +206,7 @@ class JobSearch(object):
         total_job_link = 0  # 爬取的总招聘信息链接数量
         success_link = 0  # 含有email的招聘信息链接数量
         for i in range(0, page_num):
+            print("*当前正在爬取的页面："+page_url)
             try:
                 job_link = self.get_job_link(page_url)
                 total_job_link += len(job_link)
@@ -221,6 +222,8 @@ class JobSearch(object):
                     self.temp_data = []
                     self.wrong_article_link = []
             except AttributeError:
+                print("crawl出现错误，当前爬取页面为：")
+                print(page_url)
                 pass
             # page_url = self.get_next_page(page_url)
             page_url = re.sub(r'\d+', self.url_auto_minus, page_url)
@@ -252,7 +255,7 @@ def main():
     elif choice == "求职交流" or int(choice) == 2:
         print("*****求职交流正在爬取*****")
         # search.base_url = "https://bbs.sjtu.edu.cn/bbsdoc?board=JobForum"
-        search.base_url = "https://bbs.sjtu.edu.cn/bbsdoc,board,JobForum,page,3148.html"
+        search.base_url = "https://bbs.sjtu.edu.cn/bbsdoc,board,JobForum,page,2998.html"
     else:
         print("请选择1 or 2")
         return

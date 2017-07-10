@@ -20,6 +20,7 @@ https://bbs.sjtu.edu.cn/bbsdoc?board=JobInfo
 import sys
 import os
 import re
+import codecs
 import datetime
 import requests
 from lxml import html
@@ -139,17 +140,21 @@ class JobSearch(object):
             pass
         return article_email + ',' + article_title + ',' + article_time + ',' + article_tel
 
-    def clear_same_title(self):
+    def clear_same_email(self):
         """
         将一个页面中相同邮箱的帖子中，除去旧帖子，只保留最新的一个
         :return:
         """
-        title_list = []
+        email_list = []
         index_list = []
         for post in self.temp_data:
-            title_list.append(post[2])
-        for i in range(0, len(title_list)):
-            if title_list.index(title_list[i]) != i:
+            temp = post.split(',')
+            if len(temp) >= 2:
+                email_list.append(temp[0])
+            else:
+                email_list.append('')
+        for i in range(0, len(email_list)):
+            if email_list.index(email_list[i]) != i:
                 index_list.append(i)
         index_list.reverse()
         if index_list:
@@ -178,12 +183,15 @@ class JobSearch(object):
         :return:
         """
         # print(self.temp_data)
-        with open(text[0], mode='a') as f:
-            for data in self.temp_data:
-                f.writelines(data + "\n")
-        with open(text[1], mode='a') as f:
-            for link in self.wrong_article_link:
-                f.writelines(link + "\n")
+        try:
+            with codecs.open(text[0], mode='a', encoding='utf-8') as f:
+                for data in self.temp_data:
+                    f.writelines(data + "\n")
+            with codecs.open(text[1], mode='a', encoding='utf-8') as f:
+                for link in self.wrong_article_link:
+                    f.writelines(link + "\n")
+        except UnicodeEncodeError:
+            pass
         return
 
     def crawl(self, page_url, file, page_num=10):
@@ -198,6 +206,7 @@ class JobSearch(object):
         total_job_link = 0  # 爬取的总招聘信息链接数量
         success_link = 0  # 含有email的招聘信息链接数量
         for i in range(0, page_num):
+            print("*当前正在爬取的页面："+page_url)
             try:
                 job_link = self.get_job_link(page_url)
                 total_job_link += len(job_link)
@@ -208,11 +217,13 @@ class JobSearch(object):
                         success_link += 1
                 # self.temp_data列表长度达到10，就进行输出,然后清空列表
                 if len(self.temp_data) >= 10:
-                    # self.clear_same_title()
+                    self.clear_same_email()
                     self.data_entry(file)
                     self.temp_data = []
                     self.wrong_article_link = []
             except AttributeError:
+                print("crawl出现错误，当前爬取页面为：")
+                print(page_url)
                 pass
             # page_url = self.get_next_page(page_url)
             page_url = re.sub(r'\d+', self.url_auto_minus, page_url)
@@ -244,7 +255,7 @@ def main():
     elif choice == "求职交流" or int(choice) == 2:
         print("*****求职交流正在爬取*****")
         # search.base_url = "https://bbs.sjtu.edu.cn/bbsdoc?board=JobForum"
-        search.base_url = "https://bbs.sjtu.edu.cn/bbsdoc,board,JobForum,page,2948.html"
+        search.base_url = "https://bbs.sjtu.edu.cn/bbsdoc,board,JobForum,page,2798.html"
     else:
         print("请选择1 or 2")
         return
