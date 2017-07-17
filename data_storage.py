@@ -6,7 +6,7 @@
 @author：jingchengyou
 @email：2505034080@qq.com
 """
-
+from pymongo import MongoClient
 
 def insert_data():
     """
