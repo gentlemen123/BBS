@@ -72,7 +72,7 @@ def get_article_links(page_url):
         for article_link in article_links:
             article_link = html.fromstring(html.tostring(article_link))
 
-            # 文章最后回复时间
+            # 文章最后回复时间 因为page内文章按照回复时间降序排列
             update_time = article_link.xpath("//td[5]/a/text()")[0]
             if '2017-7-5' in update_time:
                 print(update_time)

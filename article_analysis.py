@@ -1,11 +1,12 @@
 #! /usr/bin/env python3
 # coding:utf-8
 """
-解析一个文章链接中的内容，获取邮箱、电话，或者时间信息
+解析mongodb中article字段的内容，获取邮箱、电话
 
 @author：jingchengyou
 @email：2505034080@qq.com
 """
+
 
 
 def analysis_article():

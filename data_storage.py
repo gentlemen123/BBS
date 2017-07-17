@@ -12,7 +12,7 @@ from pymongo import MongoClient
 def insert_data(article_json):
     """
     插入数据
-    :param article_json: json数据，包含id,link,title,publish_time,status
+    :param article_json: json数据,键值对形式
     :return:
     """
     db = MongoClient().get_database('beijingwaiguoyu')
@@ -38,6 +38,7 @@ def find_data(pattern_json):
     db = MongoClient().get_database('beijingwaiguoyu')
     col = db.get_collection('articles')
     return col.find_one(pattern_json)
+
 
 if __name__ == "__main__":
     insert_data()
