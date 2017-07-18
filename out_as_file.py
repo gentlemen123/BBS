@@ -56,7 +56,7 @@ def output_as_txt():
         data_str = '{}\t{}\t{}\t{}\n'.format(
             email_str, phone_str, publish_time, title
         )
-        print(data_str)
+        # print(data_str)
         print('{} / {}, {:.2f}%'.format(i, total, 100 * i / total))
         i += 1
         with open('./format_data.txt', 'a+') as f:

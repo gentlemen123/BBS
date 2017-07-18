@@ -92,7 +92,6 @@ def get_article_content():
                 n = col.count()
                 print('{} / {}, {:.1f}%'.format(m + m1, n, 100 * (m + m1) / n))
             i += 1
-    print("done!")
     return
 
 
