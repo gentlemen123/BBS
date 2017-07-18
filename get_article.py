@@ -12,6 +12,8 @@ import sys
 
 from lxml import html
 
+from data_storage import connection_mongodb
+
 
 def get_article_content():
     headers = {
@@ -29,9 +31,7 @@ def get_article_content():
 
     i = 0
 
-    from pymongo import MongoClient
-    db = MongoClient().get_database('beijingwaiguoyu')
-    col = db.get_collection('articles')
+    col = connection_mongodb()
 
     while True:
         article = col.find_one_and_update(
@@ -76,10 +76,7 @@ def get_article_content():
 
             tree = html.fromstring(response.text)
             article = tree.xpath("//div[@id='textstyle_1']/text()")
-            if '\t' in article:
-                article = str(article.split('\t'))
-            if '\n' in article:
-                article = str(article.split('\n'))
+            # article = str(str(article).split())
             # comment_str = self.process_string(comment.text_content())
             # print(article)
             col.find_one_and_update(
@@ -95,6 +92,7 @@ def get_article_content():
                 n = col.count()
                 print('{} / {}, {:.1f}%'.format(m + m1, n, 100 * (m + m1) / n))
             i += 1
+    print("done!")
     return
 
 

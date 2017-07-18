@@ -7,13 +7,13 @@
 @email：2505034080@qq.com
 """
 import re
-from pymongo import MongoClient
+
+from data_storage import connection_mongodb
 
 
 # 存在两个问题:1.article的值可能是列表形式  2.是否删除article的值
 def analysis_article():
-    db = MongoClient().get_database('beijingwaiguoyu')
-    col = db.get_collection('articles')
+    col = connection_mongodb()
 
     total = col.count()
     i = 1
@@ -116,10 +116,14 @@ def analysis_article():
 
             break
 
+        for email in contact['email']:
+            if '\r' in email:
+                email.replace()
+
         if contact['phone'] or contact['email']:
             # time.sleep(0.2)
             print('{} / {}, {:.2f}%'.format(i, total, 100*i/total))
-            print(contact)
+            # print(contact)
             # time.sleep(1)
             col.find_one_and_update(
                 {'id': id},
@@ -138,6 +142,9 @@ def analysis_article():
             )
 
         i += 1
+
+    print("done")
+    return
 
 
 if __name__ == "__main__":

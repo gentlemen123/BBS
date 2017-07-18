@@ -6,12 +6,11 @@
 @author：jingchengyou
 @email：2505034080@qq.com
 """
-from pymongo import MongoClient
+from data_storage import connection_mongodb
 
 
 def output_as_txt():
-    db = MongoClient().get_database('beijingwaiguoyu')
-    col = db.get_collection('articles')
+    col = connection_mongodb()
 
     cursor = col.find({'status': 'fetched'})
     total = cursor.count()

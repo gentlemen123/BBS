@@ -12,15 +12,14 @@ import json
 import time
 import requests
 from lxml import html
-from bs4 import BeautifulSoup
 
-from data_storage import insert_data
 from data_storage import find_data
+from data_storage import insert_data
 
 
 def get_article_links(page_url):
     """
-    获取一个论坛页面所有普通主题的文章链接！
+    获取一个论坛页面所有普通主题的文章链接,标题,发表时间!
     将值存入mongodb中
     :param page_url: 论坛页面url
     :return:
@@ -48,7 +47,7 @@ def get_article_links(page_url):
         a = time.time()  # 发出请求的时间
         response = requests.get(page_url, headers=headers)
         b = time.time()  # 请求结束的时间
-        print(b-a)  # 输出一次请求所需的时间
+        print("一次请求所需时间:",b-a)  # 输出一次请求所需的时间
     except TimeoutError as e:
         print(e)
         sys.exit(1)
@@ -66,7 +65,7 @@ def get_article_links(page_url):
 
         tree = html.fromstring(response.text) # "//table[@class='mainbox tableborder']/tbody/tr[@class='trout']"
         article_links = tree.xpath("//form/table[@class='mainbox tableborder']/tr[@onmouseover]")
-        print(article_links)
+        # print(article_links)
         print("count:", len(article_links))
         for article_link in article_links:
             article_link = html.fromstring(html.tostring(article_link))
@@ -76,7 +75,7 @@ def get_article_links(page_url):
             if '2017-7-5' in update_time:
                 print(update_time)
                 print('done')
-                return True
+                return True  # 如果爬取的起止时间出现,则返回True,停止爬取
 
             # 文章发表时间
             publish_time = article_link.xpath('//td[3]/a/text()')[1].strip()
@@ -110,7 +109,7 @@ def get_article_links(page_url):
             }
             if not find_data({'id': id}):
                 insert_data(article_json)
-    return True
+    return False
 
 
 if __name__ == "__main__":

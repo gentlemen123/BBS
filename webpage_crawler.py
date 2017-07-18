@@ -52,11 +52,11 @@ def get_page_url_number(base_url):
 
     tree = html.fromstring(response.text)
     max_page = tree.xpath('//*[@id="showpage"]/a[12]/text()')[0]
-    max_page = int(max_page)
+    max_page = int(max_page.split('.')[-1])
     print('max page:', max_page)
 
     return max_page
 
 
 if __name__ == "__main__":
-    get_page_url()
+    get_page_url_number("http://www.xgbbs.net/xgbbs/index.asp?boardid=56")

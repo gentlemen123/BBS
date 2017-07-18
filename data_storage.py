@@ -9,14 +9,23 @@
 from pymongo import MongoClient
 
 
+def connection_mongodb():
+    """
+    连接数据库
+    :return: 一个集合对象
+    """
+    db = MongoClient().get_database('beijingwaiguoyu')
+    col = db.get_collection('articles')
+    return col
+
+
 def insert_data(article_json):
     """
     插入数据
     :param article_json: json数据,键值对形式
     :return:
     """
-    db = MongoClient().get_database('beijingwaiguoyu')
-    col = db.get_collection('articles')
+    col = connection_mongodb()
     col.insert_one(article_json)
     return
 
@@ -35,8 +44,7 @@ def find_data(pattern_json):
     :param pattern_json: json数据，查找的条件
     :return: boolean数据
     """
-    db = MongoClient().get_database('beijingwaiguoyu')
-    col = db.get_collection('articles')
+    col = connection_mongodb()
     return col.find_one(pattern_json)
 
 
