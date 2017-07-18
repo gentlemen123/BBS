@@ -76,6 +76,10 @@ def get_article_content():
 
             tree = html.fromstring(response.text)
             article = tree.xpath("//div[@id='textstyle_1']/text()")
+            if '\t' in article:
+                article = str(article.split('\t'))
+            if '\n' in article:
+                article = str(article.split('\n'))
             # comment_str = self.process_string(comment.text_content())
             # print(article)
             col.find_one_and_update(

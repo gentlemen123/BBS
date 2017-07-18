@@ -18,7 +18,6 @@ from data_storage import insert_data
 from data_storage import find_data
 
 
-
 def get_article_links(page_url):
     """
     获取一个论坛页面所有普通主题的文章链接！
