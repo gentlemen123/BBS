@@ -12,7 +12,7 @@ import re
 import sys
 
 import gevent as gevent
-
+from email_filter import email_filter
 from article_link_crawler import get_article_links
 from webpage_crawler import get_page_url_number
 from get_article import get_article_content
@@ -60,7 +60,10 @@ def main():
     print('*' * 5, "开始获取文章邮件", '*' * 5)
     analysis_article()
 
-    print('*' * 5, "正在将数据输入format_data.txt", '*' * 5)
+    print('*' * 5, "开始获取筛选邮件", '*' * 5)
+    email_filter()
+
+    print('*' * 5, "正在将数据输入txt文件", '*' * 5)
     output_as_txt()
 
     # 爬虫结束工作,删除过程记录文件

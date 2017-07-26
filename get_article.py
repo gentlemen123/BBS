@@ -16,31 +16,23 @@ from data_storage import connection_mongodb
 
 
 def get_article_content():
-    i = 0
-
     col = connection_mongodb()
+    total = col.count()
+    i = total - col.find({'status': 'not_done'}).count()
 
     while True:
-        article = col.find_one_and_update(
-            {'status': 'not_done'},
-            {'$set': {'status': 'ing'}}
+        article = col.find_one(
+            {'status': 'not_done'}
         )
         if not article:
             break
 
-        link = article['link']
-        id = article['id']
+        link = article['article_link']
+        article_id = article['article_id']
         try:
             response = requests.get(link, headers=headers, timeout=60)
         except TimeoutError as e:
             print(e)
-            # time.sleep(1)
-            col.find_one_and_update(
-                {'id': id},
-                {'$set': {
-                    'status': 'not_done',
-                }}
-            )
             continue
         else:
             if response.status_code != 200:
@@ -52,33 +44,31 @@ def get_article_content():
             if '文章不存在' in response.text:
                 print('article not exist')
                 print('link:', link)
-                col.delete_one({'link': link})
+                col.find_one_and_update(
+                    {'article_id': article_id},
+                    {'$set': {
+                        'status': 'not-used'
+                    }}
+                )
                 i += 1
                 continue
-            # if '楼主' not in resp.text:
-            #     print('not in the right page')
-            #     print('current page:', resp.url)
-            #     print('href:', href)
-            #     sys.exit(1)
 
             tree = html.fromstring(response.text)
-            article = tree.xpath("//div[@id='textstyle_1']/text()")
-            # article = str(str(article).split())
-            # comment_str = self.process_string(comment.text_content())
-            # print(article)
+            article = tree.xpath("//div[@article_id='textstyle_1']/text()")
+
             col.find_one_and_update(
-                {'id': id},
+                {'article_id': article_id},
                 {'$set': {
-                    'status': 'done',
+                    'status': 'fetched',
                     'article': article
                 }}
             )
-            if i % 50 == 0:
-                m = col.find({'status': 'done'}).count()
-                m1 = col.find({'status': 'fetched'}).count()
-                n = col.count()
-                print('{} / {}, {:.1f}%'.format(m + m1, n, 100 * (m + m1) / n))
             i += 1
+            print("文章爬取度:{}/{}, {:.2%}".format(i, total, i/total))
+            if i/total == 1:
+                print('done!')
+    col.delete_many({'status': 'not-used'})
+
     return
 
 

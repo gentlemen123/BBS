@@ -7,6 +7,7 @@
 @email：2505034080@qq.com
 """
 from pymongo import MongoClient
+from config import name
 
 
 def connection_mongodb():
@@ -14,7 +15,7 @@ def connection_mongodb():
     连接数据库
     :return: 一个集合对象
     """
-    db = MongoClient().get_database('beijingwaiguoyu')
+    db = MongoClient().get_database(name)
     col = db.get_collection('articles')
     return col
 

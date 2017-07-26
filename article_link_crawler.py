@@ -18,24 +18,24 @@ from data_storage import insert_data
 from config import headers
 
 
-def get_article_links(page_url):
+def get_article_links(url):
     """
     获取一个论坛页面所有普通主题的文章链接,标题,发表时间!
     将值存入mongodb中
-    :param page_url: 论坛页面url
+    :param url: 论坛页面url
     :return:
     """
-    print("\ngo to page:", page_url)
+    print("\ngo to page:", url)
     with open(".progress.json", "w+") as f:
         json.dump({
-            'page': page_url
+            'page': url
         }, f)
 
     try:
         a = time.time()  # 发出请求的时间
-        response = requests.get(page_url, headers=headers)
+        response = requests.get(url, headers=headers)
         b = time.time()  # 请求结束的时间
-        print("一次请求所需时间:",b-a)  # 输出一次请求所需的时间
+        print("一次请求所需时间:", b-a)  # 输出一次请求所需的时间
     except TimeoutError as e:
         print(e)
         sys.exit(1)
@@ -48,10 +48,10 @@ def get_article_links(page_url):
             sys.exit(1)
         if "招聘|兼职" not in response.text:
             print('not in the right page')
-            print('current page:', page_url)
+            print('current page:', url)
             sys.exit(1)
 
-        tree = html.fromstring(response.text) # "//table[@class='mainbox tableborder']/tbody/tr[@class='trout']"
+        tree = html.fromstring(response.text)
         article_links = tree.xpath("//form/table[@class='mainbox tableborder']/tr[@onmouseover]")
         # print(article_links)
         print("count:", len(article_links))
@@ -83,20 +83,21 @@ def get_article_links(page_url):
             title = article_link.xpath("//td[2]/a/text()")
             if link and title:
                 link = link[0]
-                title = title[0].split()
+                title = title[0].strip()
             else:
                 break
-            id = link.split('=')[-1]
+            article_id = link.split('=')[-1]
             link = 'http://www.xgbbs.net/xgbbs/' + link
             article_json = {
-                'id': id,
-                'link': link,
+                'article_id': article_id,
+                'article_link': link,
                 'title': title,
-                'publishTime': publish_time,
+                'publish_time': publish_time,
                 'status': 'not_done'
             }
-            if not find_data({'id': id}):
+            if not find_data({'article_id': article_id}):
                 insert_data(article_json)
+
     return False
 
 

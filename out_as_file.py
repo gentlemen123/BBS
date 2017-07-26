@@ -1,66 +1,72 @@
 #! /usr/bin/env python3
 # coding:utf-8
 """
-将MongoDB中数据输出为文件！文件格式为txt， 或xls
+将MongoDB中数据输出为文件！文件格式为txt
+
+email:列表,经筛选,全局唯一
+publish_time:字符串
+title:字符串
+telephone:列表,将组合成字符串
 
 @author：jingchengyou
 @email：2505034080@qq.com
 """
 from data_storage import connection_mongodb
+from config import name
 
 
 def output_as_txt():
+    """
+    获取Mongodb中状态为one的文件,经处理后,改变状态为output
+    注:经处理后,one状态必须为充分干净的数据
+    :return:
+    """
     col = connection_mongodb()
+    total = col.count()
+    i = total - col.find({'status': 'one'}).count()  # 已处理数量
 
-    cursor = col.find({'status': 'fetched'})
-    total = cursor.count()
-    i = 1
-    exist_emails = []  # 除重email,在整个mongodb数据库中
-    for doc in cursor:
-        contact = doc['contact']
-
-        # email
-        emails = contact.get('email')
-        if emails:
-            emails = [email.split()[0] for email in emails if email]
-            remaining_emails = []
-            for email in emails:
-                if email in exist_emails:
-                    continue
-                else:
-                    remaining_emails.append(email)
-                    exist_emails.append(email)
-        else:
-            continue
-        if remaining_emails:
-            email_str = '/'.join(remaining_emails)
-        else:
-            continue
-
-        # phone
-        phones = contact.get('phone')
-        if phones:
-            phone_str = '/'.join(phones)
-        else:
-            phone_str = None
-
-        # title
-        title = str(doc['title'][0])
-
-        # publish_time
-        publish_time = doc['publishTime']
-
-        # link
-        # link = doc['link']
-
-        data_str = '{}\t{}\t{}\t{}\n'.format(
-            email_str, phone_str, publish_time, title
+    while True:
+        articles = col.find_one(
+            {'status': 'one'}
         )
-        # print(data_str)
-        print('{} / {}, {:.2f}%'.format(i, total, 100 * i / total))
-        i += 1
-        with open('./format_data.txt', 'a+') as f:
-            f.write(data_str)
+        if not articles:
+            break
+
+        article_id = articles['article_id']
+        email = articles['email']
+        publish_time = articles['publish_time']
+        title = articles['title']
+        telephone = articles['telephone']
+
+        # 将telephone组合成字符串
+        if not telephone:
+            telephone = None
+        elif len(telephone) > 1:
+            telephone = '/'.join(telephone)
+        elif len(telephone) == 1:
+            telephone = telephone[0]
+
+        # 将一个帖子中的多个邮箱,分行输出
+        for per in email:
+            data_string = "{}\t{}\t{}\t{}\n".format(
+                per, publish_time, title, telephone)
+            with open('{}.txt'.format(name), mode='a+') as f:
+                f.write(data_string)
+
+            if data_string:
+                col.find_one_and_update(
+                    {'article_id': article_id},
+                    {'$set': {
+                        'status': "output"
+                    }}
+                )
+                i += 1
+
+        print("已写入比例:{} /{} ,比率:{:.2%}".format(i, total, i/total))
+        if i/total == 1:
+            print('done!')
+
+    return
 
 
 if __name__ == "__main__":
