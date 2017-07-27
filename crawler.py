@@ -18,6 +18,7 @@ from webpage_crawler import get_page_url_number
 from get_article import get_article_content
 from article_analysis import analysis_article
 from out_as_file import output_as_txt
+from log import log
 
 
 def main():
@@ -65,6 +66,8 @@ def main():
 
     print('*' * 5, "正在将数据输入txt文件", '*' * 5)
     output_as_txt()
+
+    log()
 
     # 爬虫结束工作,删除过程记录文件
     print('delete progress')

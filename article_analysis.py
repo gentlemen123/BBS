@@ -11,7 +11,6 @@ import re
 from data_storage import connection_mongodb
 
 
-# 存在两个问题:1.article的值可能是列表形式  2.是否删除article的值
 def analysis_article():
     col = connection_mongodb()
     total = col.count()
@@ -23,16 +22,6 @@ def analysis_article():
 
         article_id = articles['article_id']
         article = articles['article']
-        if not article:
-            col.find_one_and_update(
-                {'article_id': article_id},
-                {'$set': {
-                    'status': 'not-used'
-                }
-                }
-            )
-            i += 1
-            continue
 
         # email:数组
         email_pattern = re.compile(r'[0-9a-zA-Z]+[.0-9a-zA-Z_-]'
@@ -48,7 +37,7 @@ def analysis_article():
             col.find_one_and_update(
                 {'article_id': article_id},
                 {'$set': {
-                    'status': 'not-used'
+                    'status': 'not-email'
                 }}
             )
             i += 1
@@ -77,8 +66,6 @@ def analysis_article():
         print("文章解析完成度:{} /{}, {:.2%}".format(i, total, i / total))
         if i / total == 1:
             print('done!')
-    # 目前为止状态为not-used的文件都是无效文件
-    col.delete_many({'status': 'not-used'})
 
     return
 

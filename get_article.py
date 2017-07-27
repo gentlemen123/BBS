@@ -47,27 +47,39 @@ def get_article_content():
                 col.find_one_and_update(
                     {'article_id': article_id},
                     {'$set': {
-                        'status': 'not-used'
+                        'status': 'not-exit'
                     }}
                 )
                 i += 1
                 continue
 
             tree = html.fromstring(response.text)
+
+            # 文章必须是字符串,此处还未处理
             article = tree.xpath("//div[@article_id='textstyle_1']/text()")
 
-            col.find_one_and_update(
-                {'article_id': article_id},
-                {'$set': {
-                    'status': 'fetched',
-                    'article': article
-                }}
-            )
-            i += 1
+            if article:
+                col.find_one_and_update(
+                    {'article_id': article_id},
+                    {'$set': {
+                        'status': 'fetched',
+                        'article': article
+                    }}
+                )
+                i += 1
+            else:
+                col.find_one_and_update(
+                    {'article_id': article_id},
+                    {'$set': {
+                        'status': 'not-exit'
+                    }
+                    }
+                )
+                i += 1
+
             print("文章爬取度:{}/{}, {:.2%}".format(i, total, i/total))
             if i/total == 1:
                 print('done!')
-    col.delete_many({'status': 'not-used'})
 
     return
 

@@ -28,7 +28,7 @@ def get_article_links(url):
     print("\ngo to page:", url)
     with open(".progress.json", "w+") as f:
         json.dump({
-            'page': url
+            'page': url  # 最好是page数目
         }, f)
 
     try:

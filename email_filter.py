@@ -51,7 +51,7 @@ def email_filter():
                 col.find_one_and_update(
                     {'article_id': per[1]},
                     {'$set': {
-                        'status': 'not-used'
+                        'status': 'not-one'
                     }}
                 )
 
